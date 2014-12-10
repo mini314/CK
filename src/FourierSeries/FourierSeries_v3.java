@@ -24,6 +24,7 @@ public class FourierSeries_v3 extends javax.swing.JApplet {
         final int LECTANGULAR = 0;
         final int TRIANGLE = 1;
         final int FORMULA = 2;
+        final int COSINE = 3;
     }
     
     final private int INITIAL_WIDTH = 30;
@@ -76,6 +77,7 @@ class MainGraphPanel extends JPanel {
         // class for the trial function
         private class trialFunction extends Path2D.Double{
             public trialFunction(){
+                final double dx = width*0.01;
                 switch (shape){
                     case SHAPE.LECTANGULAR :
                         this.moveTo(virtualX(-Math.PI),virtualY(0.0));
@@ -93,10 +95,16 @@ class MainGraphPanel extends JPanel {
                         this.lineTo(virtualX(Math.PI), virtualY(0.0));
                         break;
                     case SHAPE.FORMULA :
-                        final double dx = width*0.01;
                         this.moveTo(virtualX(-Math.PI),virtualY(0.0));
                         for(double x = -width;x<width;x+=dx)
                             this.lineTo(virtualX(x), virtualY((width*width-x*x)/(width)/(width)));
+                        this.lineTo(virtualX(width), virtualY(0.0));
+                        this.lineTo(virtualX(Math.PI), virtualY(0.0));
+                        break;
+                    case SHAPE.COSINE :
+                        this.moveTo(virtualX(-Math.PI),virtualY(0.0));
+                        for(double x = -width;x<width;x+=dx)
+                            this.lineTo(virtualX(x), virtualY(Math.cos(x*Math.PI/(2.*width))));
                         this.lineTo(virtualX(width), virtualY(0.0));
                         this.lineTo(virtualX(Math.PI), virtualY(0.0));
                         break;
@@ -129,6 +137,12 @@ class MainGraphPanel extends JPanel {
                         coeficientOfCos[0] = 2.*width/(3.*Math.PI); // zeroth order coeficient
                         for(int n=1; n<=n_max; n++)
                             coeficientOfCos[n]=4./Math.PI*(Math.sin(width*n)/(width*width*n*n*n)-Math.cos(width*n)/(width*n*n)); // n-th order coeficient
+                        break;
+                    case SHAPE.COSINE :
+                        coeficientOfCos[0] = 2.*width/Math.PI/Math.PI; // zeroth order coeficient
+                        for(int n=1; n<=n_max; n++)
+                            coeficientOfCos[n]=1./Math.PI*((Math.sin(width*(Math.PI/2./width+n)))/(Math.PI/2./width+n)
+                                                           +(Math.sin(width*(Math.PI/2./width-n)))/(Math.PI/2./width-n)); // n-th order coeficient
                         break;
                 }
             
@@ -318,6 +332,7 @@ class CoefficientGraphPanel extends JPanel {
         triangleRadioButton = new javax.swing.JRadioButton();
         nMaxSpinner = new javax.swing.JSpinner();
         formulaRadioButton = new javax.swing.JRadioButton();
+        cosineRadioButton = new javax.swing.JRadioButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenu2 = new javax.swing.JMenu();
@@ -333,7 +348,7 @@ class CoefficientGraphPanel extends JPanel {
         mainGraphPanel.setLayout(mainGraphPanelLayout);
         mainGraphPanelLayout.setHorizontalGroup(
             mainGraphPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 521, Short.MAX_VALUE)
+            .addGap(0, 517, Short.MAX_VALUE)
         );
         mainGraphPanelLayout.setVerticalGroup(
             mainGraphPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -408,6 +423,14 @@ class CoefficientGraphPanel extends JPanel {
             }
         });
 
+        buttonGroup1.add(cosineRadioButton);
+        cosineRadioButton.setText("코사인");
+        cosineRadioButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cosineRadioButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -417,7 +440,7 @@ class CoefficientGraphPanel extends JPanel {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(rectangularRadioButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 104, Short.MAX_VALUE)
+                    .addComponent(rectangularRadioButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 108, Short.MAX_VALUE)
                     .addComponent(triangleRadioButton, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel3Layout.createSequentialGroup()
                         .addComponent(nMaxLabel)
@@ -427,7 +450,8 @@ class CoefficientGraphPanel extends JPanel {
                         .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(widthLabel)
                             .addComponent(shapeLabel)
-                            .addComponent(formulaRadioButton))
+                            .addComponent(formulaRadioButton)
+                            .addComponent(cosineRadioButton))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -452,6 +476,8 @@ class CoefficientGraphPanel extends JPanel {
                 .addComponent(triangleRadioButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(formulaRadioButton)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(cosineRadioButton)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -540,9 +566,17 @@ class CoefficientGraphPanel extends JPanel {
         coefficientPanel.repaint();
     }//GEN-LAST:event_formulaRadioButtonActionPerformed
 
+    private void cosineRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cosineRadioButtonActionPerformed
+        // TODO add your handling code here:
+        shape = SHAPE.COSINE;
+        mainGraphPanel.repaint();
+        coefficientPanel.repaint();
+    }//GEN-LAST:event_cosineRadioButtonActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JPanel coefficientPanel;
+    private javax.swing.JRadioButton cosineRadioButton;
     private javax.swing.JRadioButton formulaRadioButton;
     private javax.swing.JInternalFrame jInternalFrame1;
     private javax.swing.JMenu jMenu1;
