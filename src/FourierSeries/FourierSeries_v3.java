@@ -186,11 +186,11 @@ class CoefficientGraphPanel extends JPanel {
         int WIDTH_OF_PANEL;
         int HEIGHT_OF_PANEL;
         // Virtual maximum and minimum of coordinates
-        final double VIRTUAL_X_MIN = 0.0;
-        final double VIRTUAL_X_MAX = (double) INITIAL_N_MAX+1.0;
-        final double VIRTUAL_Y_MIN = -width/Math.PI;
-        final double VIRTUAL_Y_MAX = 2.0*width/Math.PI;
-
+        double VIRTUAL_X_MIN = 0.0;
+        double VIRTUAL_X_MAX = (double) INITIAL_N_MAX+1.0;
+        double VIRTUAL_Y_MIN = -width/Math.PI;
+        double VIRTUAL_Y_MAX = 2.0*width/Math.PI;
+        
         public CoefficientGraphPanel(){
         }
 
@@ -201,22 +201,34 @@ class CoefficientGraphPanel extends JPanel {
         * into real coordinates.
         */
         private double virtualX(double x) { // get virtual x coordinate
-            final double VIRTUAL_X_MIN = 0.0;
-            final double VIRTUAL_X_MAX = (double) n_max+1.0;
             return (x-VIRTUAL_X_MIN)*WIDTH_OF_PANEL*(1.0-MARGIN_OF_RIGHT-MARGIN_OF_LEFT)/(VIRTUAL_X_MAX-VIRTUAL_X_MIN)+WIDTH_OF_PANEL*MARGIN_OF_LEFT;
         }
         private double virtualY(double y) { // get vritual y coordinate
-            final double VIRTUAL_Y_MIN = -width/Math.PI;
-            final double VIRTUAL_Y_MAX = 2.0*width/Math.PI;
             return (VIRTUAL_Y_MAX-y)*HEIGHT_OF_PANEL*(1.0-MARGIN_OF_ABOVE-MARGIN_OF_BELOW)/(VIRTUAL_Y_MAX-VIRTUAL_Y_MIN)+HEIGHT_OF_PANEL*MARGIN_OF_ABOVE;
         }
         // class for axis
         private class axis extends Path2D.Double{
             public axis(){
-                final double VIRTUAL_X_MIN = 0.0;
-                final double VIRTUAL_X_MAX = (double) n_max+1.0;
-                final double VIRTUAL_Y_MIN = -width/Math.PI;
-                final double VIRTUAL_Y_MAX = 2.0*width/Math.PI;
+                VIRTUAL_X_MIN = 0.0;
+                VIRTUAL_X_MAX = (double) n_max+1.0;
+                switch (shape){
+                    case SHAPE.LECTANGULAR :
+                        VIRTUAL_Y_MIN = -width/Math.PI;
+                        VIRTUAL_Y_MAX = 3.0*width/Math.PI;
+                        break;
+                    case SHAPE.TRIANGLE :
+                        VIRTUAL_Y_MIN = -width/(2.*Math.PI);
+                        VIRTUAL_Y_MAX = 3.0*width/(2.*Math.PI);
+                        break;
+                    case SHAPE.FORMULA :
+                        VIRTUAL_Y_MIN = -2.*width/(3.*Math.PI);
+                        VIRTUAL_Y_MAX = 3.0*2.*width/(3.*Math.PI);
+                        break;
+                    case SHAPE.COSINE :
+                        VIRTUAL_Y_MIN = -2.*width/Math.PI/Math.PI;
+                        VIRTUAL_Y_MAX = 4.0*width/Math.PI/Math.PI;
+                        break;
+                }
                 
                 this.moveTo(virtualX(VIRTUAL_X_MIN),virtualY(0.0));
                 this.lineTo(virtualX(VIRTUAL_X_MAX), virtualY(0.0));
@@ -229,15 +241,45 @@ class CoefficientGraphPanel extends JPanel {
         private class coeficients extends Path2D.Double{
             private double width; // width of the trial function
             private double n_max; // the largest order for partial sumation
+            private double[] coeficientOfCos;
             public coeficients(double width, int n_max){ // get width of the trial function and the largest order n_max
                 this.width = width;
                 this.n_max = n_max;
                 
+                coeficientOfCos = new double[n_max+1];
+                switch (shape){
+                    case SHAPE.LECTANGULAR :
+                        coeficientOfCos[0] = width/Math.PI; // zeroth order coeficient
+                        for(int n=1; n<=n_max; n++)
+                            coeficientOfCos[n]=2./Math.PI*Math.sin(width*n)/n; // n-th order coeficient
+                        break;
+                    case SHAPE.TRIANGLE :
+                        coeficientOfCos[0] = width/(2.*Math.PI); // zeroth order coeficient
+                        for(int n=1; n<=n_max; n++)
+                            coeficientOfCos[n]=2./Math.PI*(1.-Math.cos(width*n))/(width*n*n); // n-th order coeficient
+                        break;
+                    case SHAPE.FORMULA :
+                        coeficientOfCos[0] = 2.*width/(3.*Math.PI); // zeroth order coeficient
+                        for(int n=1; n<=n_max; n++)
+                            coeficientOfCos[n]=4./Math.PI*(Math.sin(width*n)/(width*width*n*n*n)-Math.cos(width*n)/(width*n*n)); // n-th order coeficient
+                        break;
+                    case SHAPE.COSINE :
+                        coeficientOfCos[0] = 2.*width/Math.PI/Math.PI; // zeroth order coeficient
+                        for(int n=1; n<=n_max; n++)
+                            coeficientOfCos[n]=1./Math.PI*((Math.sin(width*(Math.PI/2./width+n)))/(Math.PI/2./width+n)
+                                                           +(Math.sin(width*(Math.PI/2./width-n)))/(Math.PI/2./width-n)); // n-th order coeficient
+                        break;
+                }
+                
                 this.moveTo(virtualX(0.0), virtualY(0.0));
-                this.lineTo(virtualX(0.0), virtualY(width/Math.PI));
+                this.lineTo(virtualX(0.0), virtualY(coeficientOfCos[0]));
+                this.lineTo(virtualX(0.0+0.5), virtualY(coeficientOfCos[0]));
+                this.lineTo(virtualX(0.0+0.5), virtualY(0.0));
                 for(int n=1; n<=n_max; n++) {
-                        this.moveTo(virtualX((double)n), virtualY(0.0));
-                        this.lineTo(virtualX((double)n), virtualY(2.*Math.sin(width*n)/(double)n/Math.PI));
+                        this.moveTo(virtualX((double)n-0.5), virtualY(0.0));
+                        this.lineTo(virtualX((double)n-0.5), virtualY(coeficientOfCos[n]));
+                        this.lineTo(virtualX((double)n+0.5), virtualY(coeficientOfCos[n]));
+                        this.lineTo(virtualX((double)n+0.5), virtualY(0.0));
                     }
                 }
             }
