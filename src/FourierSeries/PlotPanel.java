@@ -44,14 +44,14 @@ class PlotPanel  extends JPanel {
     * from (VIRTUAL_X_MIN,VIRTUAL_Y_MIN) to (VIRTUAL_X_MAX,VIRTUAL_Y_MAX)
     * into real coordinates.
     */
-    private double virtualX(double x) { // get virtual x coordinate
+    protected double virtualX(double x) { // get virtual x coordinate
         return (x-VIRTUAL_X_MIN)*WIDTH_OF_PANEL*(1.0-MARGIN_OF_RIGHT-MARGIN_OF_LEFT)/(VIRTUAL_X_MAX-VIRTUAL_X_MIN)+WIDTH_OF_PANEL*MARGIN_OF_LEFT;
     }
-    private double virtualY(double y) { // get vritual y coordinate
+    protected double virtualY(double y) { // get vritual y coordinate
         return (VIRTUAL_Y_MAX-y)*HEIGHT_OF_PANEL*(1.0-MARGIN_OF_ABOVE-MARGIN_OF_BELOW)/(VIRTUAL_Y_MAX-VIRTUAL_Y_MIN)+HEIGHT_OF_PANEL*MARGIN_OF_ABOVE;
     }
     // class for axis
-    private class axis extends Path2D.Double{
+    protected class axis extends Path2D.Double{
         public axis(){
             this.moveTo(virtualX(VIRTUAL_X_MIN),virtualY(VIRTUAL_Y_MIN));
             this.lineTo(virtualX(VIRTUAL_X_MAX), virtualY(VIRTUAL_Y_MIN));

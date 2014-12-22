@@ -29,7 +29,7 @@ public class MainPanel extends PlotPanel {
     // class for the trial function
     private class trialFunction extends Path2D.Double{
         public trialFunction(double width){
-            this.moveTo(this.virtualX(-Math.PI),this.virtualY(0.0));
+            this.moveTo(virtualX(-Math.PI),virtualY(0.0));
             this.lineTo(virtualX(-width), virtualY(0.0));
             this.lineTo(virtualX(-width), virtualY(1.0));
             this.lineTo(virtualX(width), virtualY(1.0));
@@ -63,3 +63,4 @@ public class MainPanel extends PlotPanel {
             }
         }
     }
+}
