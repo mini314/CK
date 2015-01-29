@@ -19,10 +19,17 @@ import javax.swing.JPanel;
  */
 public class IdealGas_v2 extends javax.swing.JApplet {
 
-    final private double TEMPERATURE_MAX = 1.0;
-    final private double PRESSURE_MAX = 1.0;
-    final private double VOLUME_MAX = 1.0;
+    final private double TEMPERATURE_MAX = 1.0; // maximal value of the temperature of environment
+    final private double PRESSURE_MAX = 1.0; // maximal value of the pressure
+    final private double VOLUME_MAX = 1.0; // maximal value of the volume
     
+    private double positionPiston = 0.5; // positon of the piston
+    private double[] xGas = new double[10]; // x position of a i-th gas particle
+    private double[] yGas = new double[10]; // y position of a i-th gas particle
+    private double[] vxGas = new double[10]; // x velocity of a i-th gas particle
+    private double[] vyGas = new double[10]; // y velocity of a i-th gas particle
+    final private double SIZE_GAS = 2; // radius of gas particles
+
     class VPGraphPanel extends JPanel {
         // Proportion of margin of panel
         final double MARGIN_OF_RIGHT = 0.1; // for right
@@ -75,8 +82,7 @@ public class IdealGas_v2 extends javax.swing.JApplet {
             g2.setPaint(Color.black);
             g2.draw(new axis());
         }
-    }
-    
+    }    
     class TVGraphPanel extends JPanel {
         // Proportion of margin of panel
         final double MARGIN_OF_RIGHT = 0.1; // for right
@@ -131,6 +137,39 @@ public class IdealGas_v2 extends javax.swing.JApplet {
         }
     }
     
+    class AnimationPanel extends JPanel {
+        final private int POSITION_X_CYLINDER = 20; // x position of the inner square of the cylinder
+        final private int POSITION_Y_CYLINDER = 20; // y position of the inner square of the cylinder
+        final private int WIDTH_CYLINDER = 260; // maximal width of the inner square of the cylinder
+        final private int HEIGHT_CYLINDER = 120; // height of the inner square of the cylinder
+        final private int THICKNESS_WALL = 10; // thickness of the walls building the cylinder
+        
+        AnimationPanel() {
+        }
+
+        private int virtualX(double x) { // get virtual x coordinate
+            return (int)(x*WIDTH_CYLINDER+POSITION_X_CYLINDER);
+        }
+        private int virtualY(double y) { // get vritual y coordinate
+            return (int)((1.0-y)*HEIGHT_CYLINDER+POSITION_Y_CYLINDER);
+        }
+        
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D)g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+            
+            // Drawing the cylinder
+            g2.setPaint(Color.gray);
+            g2.fillRect(POSITION_X_CYLINDER-THICKNESS_WALL,POSITION_Y_CYLINDER-THICKNESS_WALL,THICKNESS_WALL,HEIGHT_CYLINDER+2*THICKNESS_WALL);
+            g2.fillRect(POSITION_X_CYLINDER,POSITION_Y_CYLINDER-THICKNESS_WALL,WIDTH_CYLINDER+THICKNESS_WALL,THICKNESS_WALL);
+            g2.fillRect(POSITION_X_CYLINDER,POSITION_Y_CYLINDER+HEIGHT_CYLINDER,WIDTH_CYLINDER+THICKNESS_WALL,THICKNESS_WALL);
+            
+            // Drawing the piston
+            g2.setPaint(Color.blue);
+            g2.fillRect(virtualX(positionPiston),POSITION_Y_CYLINDER,THICKNESS_WALL,HEIGHT_CYLINDER);
+        }
+    }
     /**
      * Initializes the applet NewJApplet
      */
@@ -191,11 +230,11 @@ public class IdealGas_v2 extends javax.swing.JApplet {
         jInternalFrame1 = new javax.swing.JInternalFrame();
         AboveGraphPanel = new VPGraphPanel();
         BelowGraphPanel = new TVGraphPanel();
-        GraphicPanel = new javax.swing.JPanel();
+        GraphicPanel = new AnimationPanel();
         ControlPanel = new javax.swing.JPanel();
         jRadioButton1 = new javax.swing.JRadioButton();
         jRadioButton2 = new javax.swing.JRadioButton();
-        jSlider1 = new javax.swing.JSlider();
+        volumeSlider = new javax.swing.JSlider();
         jSlider2 = new javax.swing.JSlider();
 
         jInternalFrame1.setVisible(true);
@@ -255,6 +294,12 @@ public class IdealGas_v2 extends javax.swing.JApplet {
         buttonGroup1.add(jRadioButton2);
         jRadioButton2.setText("temperature");
 
+        volumeSlider.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                volumeSliderStateChanged(evt);
+            }
+        });
+
         javax.swing.GroupLayout ControlPanelLayout = new javax.swing.GroupLayout(ControlPanel);
         ControlPanel.setLayout(ControlPanelLayout);
         ControlPanelLayout.setHorizontalGroup(
@@ -269,7 +314,7 @@ public class IdealGas_v2 extends javax.swing.JApplet {
                         .addComponent(jRadioButton1)
                         .addGap(34, 34, 34)))
                 .addGroup(ControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jSlider1, javax.swing.GroupLayout.DEFAULT_SIZE, 182, Short.MAX_VALUE)
+                    .addComponent(volumeSlider, javax.swing.GroupLayout.DEFAULT_SIZE, 182, Short.MAX_VALUE)
                     .addComponent(jSlider2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -278,7 +323,7 @@ public class IdealGas_v2 extends javax.swing.JApplet {
             .addGroup(ControlPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(ControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jSlider1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(volumeSlider, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jRadioButton1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(ControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -334,6 +379,12 @@ public class IdealGas_v2 extends javax.swing.JApplet {
         // TODO add your handling code here:
     }//GEN-LAST:event_jRadioButton1ActionPerformed
 
+    private void volumeSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_volumeSliderStateChanged
+        // TODO add your handling code here:
+        positionPiston = ((double)volumeSlider.getValue())/100.0;
+        GraphicPanel.repaint();
+    }//GEN-LAST:event_volumeSliderStateChanged
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel AboveGraphPanel;
@@ -344,7 +395,7 @@ public class IdealGas_v2 extends javax.swing.JApplet {
     private javax.swing.JInternalFrame jInternalFrame1;
     private javax.swing.JRadioButton jRadioButton1;
     private javax.swing.JRadioButton jRadioButton2;
-    private javax.swing.JSlider jSlider1;
     private javax.swing.JSlider jSlider2;
+    private javax.swing.JSlider volumeSlider;
     // End of variables declaration//GEN-END:variables
 }
