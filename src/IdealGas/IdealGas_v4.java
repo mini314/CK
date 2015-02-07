@@ -16,6 +16,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.util.Random;
 
 /**
  *
@@ -149,6 +150,12 @@ public class IdealGas_v4 extends javax.swing.JApplet {
         final private int THICKNESS_WALL = 10; // thickness of the walls building the cylinder
         
         AnimationPanel() {
+            for(int i=0;i<10;i++) {
+                xGas[i] = positionPiston*Math.random();
+                yGas[i] = positionPiston*Math.random();
+                vxGas[i] = Math.random()-0.5;
+                vyGas[i] = Math.random()-0.5;
+            }
         }
 
         private int virtualX(double x) { // get virtual x coordinate
@@ -176,6 +183,16 @@ public class IdealGas_v4 extends javax.swing.JApplet {
             // Drawing the piston
             g2.setPaint(Color.blue);
             g2.fillRect(virtualX(positionPiston),POSITION_Y_CYLINDER,THICKNESS_WALL,HEIGHT_CYLINDER);
+            
+            // Drawing the particles
+            for(int i=0;i<10;i++) {
+                // Reflection
+                if(xGas[i]<0.0) vxGas[i]*=-1;
+                if(xGas[i]>positionPiston) vxGas[i]*=-1;
+                if(yGas[i]<0.0) vyGas[i]*=-1;
+                if(yGas[i]>1.0) vyGas[i]*=-1;
+                g2.drawOval(virtualX(xGas[i]+=vxGas[i]*0.01), virtualY(yGas[i]+=vyGas[i]*0.01), 1, 1);
+            }
         }
     }
     /**
@@ -212,7 +229,7 @@ public class IdealGas_v4 extends javax.swing.JApplet {
             java.awt.EventQueue.invokeAndWait(new Runnable() {
                 public void run() {
                     initComponents();
-                    javax.swing.Timer timer = new javax.swing.Timer(100,new timeListener());
+                    javax.swing.Timer timer = new javax.swing.Timer(1,new timeListener());
                     timer.start();
                 }
             });
@@ -223,7 +240,6 @@ public class IdealGas_v4 extends javax.swing.JApplet {
 public class timeListener implements ActionListener 
     {
             public void actionPerformed(ActionEvent e) {
-                System.out.println("On Timer!!");
                 GraphicPanel.repaint();
             }
     };
@@ -398,6 +414,10 @@ public class timeListener implements ActionListener
     private void volumeSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_volumeSliderStateChanged
         // TODO add your handling code here:
         positionPiston = ((double)volumeSlider.getValue())/100.0;
+        for(int i=0;i<10;i++) {
+                // Reflection
+                if(xGas[i]>positionPiston) xGas[i]=positionPiston;
+        }
     }//GEN-LAST:event_volumeSliderStateChanged
 
     private void temperatureSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_temperatureSliderStateChanged
