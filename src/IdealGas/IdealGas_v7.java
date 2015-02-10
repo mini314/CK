@@ -35,9 +35,10 @@ public class IdealGas_v7 extends javax.swing.JApplet {
     final private double VOLUME_MAX = 1.1; // maximal value of the volume
     
     private double temperature = 0.5;
-    private double pressure = 0.0;
+    private double[] pressure = new double[1000];
+    private int time = 0;
+    final private int TIME_MAX = 1000;
     private double positionPiston = 0.5; // positon of the piston
-    private double time = 0.0;
     final private double TIME_INTERVAL = 0.001;
     
     private int mode = MODE.VOLUME;
@@ -46,7 +47,50 @@ public class IdealGas_v7 extends javax.swing.JApplet {
     private double[] yGas = new double[PARTICLE_NUMBER]; // y position of a i-th gas particle
     private double[] vxGas = new double[PARTICLE_NUMBER]; // x velocity of a i-th gas particle
     private double[] vyGas = new double[PARTICLE_NUMBER]; // y velocity of a i-th gas particle
-    final private double SIZE_GAS = 2; // radius of gas particles
+    
+    private void initialize() {
+        for(int i=0;i<PARTICLE_NUMBER;i++) {
+            xGas[i] = positionPiston*Math.random();
+            yGas[i] = Math.random();
+            vxGas[i] = Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random());
+            vyGas[i] = Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random());
+        }
+        for(int time=0;time<TIME_MAX;time++) {
+            pressure[time] = 0.0;
+            for(int i=0;i<PARTICLE_NUMBER;i++) {
+                // Reflection
+                if(xGas[i]<0.0) {
+                    vxGas[i]=Math.abs(vxGas[i]);
+                    vyGas[i]=Math.signum(vyGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
+                    pressure[time] += Math.abs(vxGas[i]);
+                }
+                if(xGas[i]>positionPiston) {
+                    vxGas[i]=-Math.abs(vxGas[i]);
+                    vyGas[i]=Math.signum(vyGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
+                    pressure[time] += Math.abs(vxGas[i]);
+                }
+                if(yGas[i]<0.0) {
+                    vxGas[i]=Math.signum(vxGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
+                    vyGas[i]=Math.abs(vyGas[i]);
+                    pressure[time] += Math.abs(vyGas[i])/positionPiston;
+                }
+                if(yGas[i]>1.0) {
+                    vxGas[i]=Math.signum(vxGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
+                    vyGas[i]=-Math.abs(vyGas[i]);
+                    pressure[time] += Math.abs(vyGas[i])/positionPiston;
+                }
+                xGas[i]+=vxGas[i]*TIME_INTERVAL;
+                yGas[i]+=vyGas[i]*TIME_INTERVAL;
+            }
+        }
+    }
+    private double pressure() {
+        double temp = 0.0;
+        for(int t=0;t<TIME_MAX;t++) {
+            temp += pressure[t];
+        }
+        return temp/TIME_MAX/2.;
+    }
 
     class VPGraphPanel extends JPanel {
         // Proportion of margin of panel
@@ -106,6 +150,8 @@ public class IdealGas_v7 extends javax.swing.JApplet {
             // Drawing x-axis and y-axis
             g2.setPaint(Color.black);
             g2.draw(new axis());
+            g2.drawString("V", (int) virtualX(VIRTUAL_X_MAX), (int)virtualY(-1.0));
+            g2.drawString("p", (int) virtualX(-0.05), (int)virtualY(VIRTUAL_Y_MAX));
             
             // Drawing theory line
             g2.setPaint(Color.blue);
@@ -113,10 +159,10 @@ public class IdealGas_v7 extends javax.swing.JApplet {
             
             // Drawing point
             g2.setPaint(Color.red);
-            g2.fillOval((int)virtualX(positionPiston)-5, (int)virtualY(pressure/time/2.)-5, 10, 10);
+            g2.fillOval((int)virtualX(positionPiston)-5, (int)virtualY(pressure())-5, 10, 10);
         }
     }    
-    class TVGraphPanel extends JPanel {
+    class TPGraphPanel extends JPanel {
         // Proportion of margin of panel
         final double MARGIN_OF_RIGHT = 0.1; // for right
         final double MARGIN_OF_LEFT = 0.1; // for left
@@ -129,9 +175,9 @@ public class IdealGas_v7 extends javax.swing.JApplet {
         final double VIRTUAL_X_MIN = 0.0;
         final double VIRTUAL_X_MAX = TEMPERATURE_MAX;
         final double VIRTUAL_Y_MIN = 0.0;
-        final double VIRTUAL_Y_MAX = VOLUME_MAX;
+        final double VIRTUAL_Y_MAX = PRESSURE_MAX;
 
-        public TVGraphPanel(){
+        public TPGraphPanel(){
         }
 
         /*
@@ -155,6 +201,13 @@ public class IdealGas_v7 extends javax.swing.JApplet {
                 this.lineTo(virtualX(0.0), virtualY(VIRTUAL_Y_MAX));
             }
         }
+        private class theory extends Path2D.Double{
+            public theory(){
+                this.moveTo(virtualX(0.0),virtualY(0.0));
+                for(double x = 0.0;x<1.0;x+=0.01)
+                    this.lineTo(virtualX(x), virtualY(x/positionPiston));
+            }
+        }
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D)g;
@@ -167,6 +220,16 @@ public class IdealGas_v7 extends javax.swing.JApplet {
             // Drawing x-axis and y-axis
             g2.setPaint(Color.black);
             g2.draw(new axis());
+            g2.drawString("T", (int) virtualX(VIRTUAL_X_MAX), (int)virtualY(-1.0));
+            g2.drawString("p", (int) virtualX(-0.05), (int)virtualY(VIRTUAL_Y_MAX));
+            
+            // Drawing theory line
+            g2.setPaint(Color.blue);
+            g2.draw(new theory());
+            
+            // Drawing point
+            g2.setPaint(Color.red);
+            g2.fillOval((int)virtualX(temperature)-5, (int)virtualY(pressure())-5, 10, 10);
         }
     }
     
@@ -178,38 +241,7 @@ public class IdealGas_v7 extends javax.swing.JApplet {
         final int THICKNESS_WALL = 10; // thickness of the walls building the cylinder
         
         AnimationPanel() {
-            pressure = 0.0;
-            time = 0.0;
-            for(int i=0;i<PARTICLE_NUMBER;i++) {
-                xGas[i] = positionPiston*Math.random();
-                yGas[i] = Math.random();
-                vxGas[i] = Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random());
-                vyGas[i] = Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random());
-            }
-            for(int t=0;t<1000;t++) {
-                for(int i=0;i<PARTICLE_NUMBER;i++) {
-                            // Reflection
-                            if(xGas[i]<0.0) {
-                                vxGas[i]*=-1.;
-                                pressure += Math.abs(vxGas[i]);
-                            }
-                            if(xGas[i]>positionPiston) {
-                                vxGas[i]*=-1.;
-                                pressure += Math.abs(vxGas[i]);
-                            }
-                            if(yGas[i]<0.0) {
-                                vyGas[i]*=-1.;
-                                pressure += Math.abs(vyGas[i])/positionPiston;
-                            }
-                            if(yGas[i]>1.0) {
-                                vyGas[i]*=-1.;
-                                pressure += Math.abs(vyGas[i])/positionPiston;
-                            }
-                            xGas[i]+=vxGas[i]*TIME_INTERVAL;
-                            yGas[i]+=vyGas[i]*TIME_INTERVAL;
-                            time += TIME_INTERVAL;
-                }
-            }
+            initialize();
         }
 
         private int virtualX(double x) { // get virtual x coordinate
@@ -238,6 +270,9 @@ public class IdealGas_v7 extends javax.swing.JApplet {
             g2.setPaint(Color.blue);
             g2.fillRect(virtualX(positionPiston),POSITION_Y_CYLINDER,THICKNESS_WALL,HEIGHT_CYLINDER);
             
+            if(time==TIME_MAX) 
+                time-=TIME_MAX;
+            pressure[time] = 0.0;
             // Drawing the particles
             switch (mode){
                 case MODE.VOLUME :
@@ -246,38 +281,55 @@ public class IdealGas_v7 extends javax.swing.JApplet {
                         if(xGas[i]<0.0) {
                             vxGas[i]=Math.abs(vxGas[i]);
                             vyGas[i]=Math.signum(vyGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
-                            pressure += Math.abs(vxGas[i]);
+                            pressure[time] += Math.abs(vxGas[i]);
                         }
                         if(xGas[i]>positionPiston) {
                             vxGas[i]=-Math.abs(vxGas[i]);
                             vyGas[i]=Math.signum(vyGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
-                            pressure += Math.abs(vxGas[i]);
+                            pressure[time] += Math.abs(vxGas[i]);
                         }
                         if(yGas[i]<0.0) {
                             vxGas[i]=Math.signum(vxGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
                             vyGas[i]=Math.abs(vyGas[i]);
-                            pressure += Math.abs(vyGas[i])/positionPiston;
+                            pressure[time] += Math.abs(vyGas[i])/positionPiston;
                         }
                         if(yGas[i]>1.0) {
                             vxGas[i]=Math.signum(vxGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
                             vyGas[i]=-Math.abs(vyGas[i]);
-                            pressure += Math.abs(vyGas[i])/positionPiston;
+                            pressure[time] += Math.abs(vyGas[i])/positionPiston;
                         }
                         g2.drawOval(virtualX(xGas[i]+=vxGas[i]*TIME_INTERVAL), virtualY(yGas[i]+=vyGas[i]*TIME_INTERVAL), 1, 1);
-                        time += TIME_INTERVAL;
-                        }
-                    break;
+                    }
+                break;
                 case MODE.TEMPERATURE :
                     for(int i=0;i<PARTICLE_NUMBER;i++) {
                         // Reflection
-                        if(xGas[i]<0.0) vxGas[i]*=-1;
-                        if(xGas[i]>positionPiston) vxGas[i]*=-1;
-                        if(yGas[i]<0.0) vyGas[i]*=-1;
-                        if(yGas[i]>1.0) vyGas[i]*=-1;
+                        if(xGas[i]<0.0) {
+                            vxGas[i]=Math.abs(vxGas[i]);
+                            vyGas[i]=Math.signum(vyGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
+                            pressure[time] += Math.abs(vxGas[i]);
+                        }
+                        if(xGas[i]>positionPiston) {
+                            vxGas[i]=-Math.abs(vxGas[i]);
+                            vyGas[i]=Math.signum(vyGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
+                            pressure[time] += Math.abs(vxGas[i]);
+                        }
+                        if(yGas[i]<0.0) {
+                            vxGas[i]=Math.signum(vxGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
+                            vyGas[i]=Math.abs(vyGas[i]);
+                            pressure[time] += Math.abs(vyGas[i])/positionPiston;
+                        }
+                        if(yGas[i]>1.0) {
+                            vxGas[i]=Math.signum(vxGas[i])*Math.abs(Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random()));
+                            vyGas[i]=-Math.abs(vyGas[i]);
+                            pressure[time] += Math.abs(vyGas[i])/positionPiston;
+                        }
                         g2.drawOval(virtualX(xGas[i]+=vxGas[i]*TIME_INTERVAL), virtualY(yGas[i]+=vyGas[i]*TIME_INTERVAL), 1, 1);
                     }
-                        break;
+                break;
             }
+            time++;
+            
         }
     }
     /**
@@ -308,20 +360,6 @@ public class IdealGas_v7 extends javax.swing.JApplet {
         }
         //</editor-fold>
         //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
-        //</editor-fold>
 
         /* Create and display the applet */
         try {
@@ -341,8 +379,13 @@ public class timeListener implements ActionListener
             public void actionPerformed(ActionEvent e) {
                 System.out.print(temperature);
                 System.out.print(' ');
-                System.out.println(pressure/time/2.);
+                System.out.print(time);
+                System.out.print(' ');
+                System.out.println(pressure());
                 AboveGraphPanel.repaint();
+                GraphicPanel.repaint();
+                AboveGraphPanel.repaint();
+                BelowGraphPanel.repaint();
                 GraphicPanel.repaint();
             }
     };
@@ -358,7 +401,7 @@ public class timeListener implements ActionListener
         buttonGroup1 = new javax.swing.ButtonGroup();
         jInternalFrame1 = new javax.swing.JInternalFrame();
         AboveGraphPanel = new VPGraphPanel();
-        BelowGraphPanel = new TVGraphPanel();
+        BelowGraphPanel = new TPGraphPanel();
         GraphicPanel = new AnimationPanel();
         ControlPanel = new javax.swing.JPanel();
         volumeButton = new javax.swing.JRadioButton();
@@ -524,87 +567,27 @@ public class timeListener implements ActionListener
         // TODO add your handling code here:
         volumeSlider.setEnabled(true);
         temperatureSlider.setEnabled(false);
+        mode = MODE.VOLUME;
     }//GEN-LAST:event_volumeButtonActionPerformed
 
     private void volumeSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_volumeSliderStateChanged
         // TODO add your handling code here:
-        pressure = 0.0;
-        time = 0.0;
         positionPiston = ((double)volumeSlider.getValue())/100.0;
-        for(int i=0;i<PARTICLE_NUMBER;i++) {
-            xGas[i] = positionPiston*Math.random();
-            yGas[i] = Math.random();
-            vxGas[i] = Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random());
-            vyGas[i] = Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random());
-        }
-        for(int t=0;t<1000;t++) {
-            for(int i=0;i<PARTICLE_NUMBER;i++) {
-                        // Reflection
-                        if(xGas[i]<0.0) {
-                            vxGas[i]*=-1.;
-                            pressure += Math.abs(vxGas[i]);
-                        }
-                        if(xGas[i]>positionPiston) {
-                            vxGas[i]*=-1.;
-                            pressure += Math.abs(vxGas[i]);
-                        }
-                        if(yGas[i]<0.0) {
-                            vyGas[i]*=-1.;
-                            pressure += Math.abs(vyGas[i])/positionPiston;
-                        }
-                        if(yGas[i]>1.0) {
-                            vyGas[i]*=-1.;
-                            pressure += Math.abs(vyGas[i])/positionPiston;
-                        }
-                        xGas[i]+=vxGas[i]*TIME_INTERVAL;
-                        yGas[i]+=vyGas[i]*TIME_INTERVAL;
-                        time += TIME_INTERVAL;
-            }
-        }
+        initialize();
     }//GEN-LAST:event_volumeSliderStateChanged
 
     private void temperatureSliderStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_temperatureSliderStateChanged
         // TODO add your handling code here:
-        pressure = 0.0;
-        time = 0.0;
         temperature = ((double)temperatureSlider.getValue())/100.0;
         GraphicPanel.setBackground(new java.awt.Color(142+(int)(88*temperature),180+(int)(5*temperature),227-(int)(43*temperature)));
-        for(int i=0;i<PARTICLE_NUMBER;i++) {
-            xGas[i] = positionPiston*Math.random();
-            yGas[i] = Math.random();
-            vxGas[i] = Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random());
-            vyGas[i] = Math.sqrt(-temperature*2.*Math.log(Math.random()))*Math.cos(2.*Math.PI*Math.random());
-        }
-        for(int t=0;t<1000;t++) {
-            for(int i=0;i<PARTICLE_NUMBER;i++) {
-                        // Reflection
-                        if(xGas[i]<0.0) {
-                            vxGas[i]*=-1.;
-                            pressure += Math.abs(vxGas[i]);
-                        }
-                        if(xGas[i]>positionPiston) {
-                            vxGas[i]*=-1.;
-                            pressure += Math.abs(vxGas[i]);
-                        }
-                        if(yGas[i]<0.0) {
-                            vyGas[i]*=-1.;
-                            pressure += Math.abs(vyGas[i])/positionPiston;
-                        }
-                        if(yGas[i]>1.0) {
-                            vyGas[i]*=-1.;
-                            pressure += Math.abs(vyGas[i])/positionPiston;
-                        }
-                        xGas[i]+=vxGas[i]*TIME_INTERVAL;
-                        yGas[i]+=vyGas[i]*TIME_INTERVAL;
-                        time += TIME_INTERVAL;
-            }
-        }
+        initialize();
     }//GEN-LAST:event_temperatureSliderStateChanged
 
     private void temperatureRadioButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_temperatureRadioButtonActionPerformed
         // TODO add your handling code here:
         volumeSlider.setEnabled(false);
         temperatureSlider.setEnabled(true);
+        mode = MODE.TEMPERATURE;
     }//GEN-LAST:event_temperatureRadioButtonActionPerformed
 
 

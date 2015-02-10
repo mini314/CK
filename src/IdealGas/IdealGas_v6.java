@@ -333,6 +333,8 @@ public class timeListener implements ActionListener
             public void actionPerformed(ActionEvent e) {
                 System.out.print(temperature);
                 System.out.print(' ');
+                System.out.print(time);
+                System.out.print(' ');
                 System.out.println(pressure/time/2.);
                 AboveGraphPanel.repaint();
                 GraphicPanel.repaint();
