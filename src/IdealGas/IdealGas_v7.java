@@ -205,7 +205,7 @@ public class IdealGas_v7 extends javax.swing.JApplet {
             public theory(){
                 this.moveTo(virtualX(0.0),virtualY(0.0));
                 for(double x = 0.0;x<1.0;x+=0.01)
-                    this.lineTo(virtualX(x), virtualY(x/positionPiston));
+                    this.lineTo(virtualX(x), virtualY(1.015*x/positionPiston));
             }
         }
         protected void paintComponent(Graphics g) {
