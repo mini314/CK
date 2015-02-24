@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.util.Random;
+import java.text.DecimalFormat;
 
 /**
  *
@@ -362,9 +363,14 @@ public class IdealGas_vA2 extends javax.swing.JApplet {
 public class timeListener implements ActionListener 
     {
             public void actionPerformed(ActionEvent e) {
-                volumeTextField.setText(""+positionPiston);
-                temperatureTextField.setText(""+temperature());
-                pressureTextField.setText(""+pressure());
+                DecimalFormat printText = new DecimalFormat("#.####");
+                
+                volumeTextField.setText(printText.format(positionPiston));
+                temperatureTextField.setText(printText.format(temperature()));
+                pressureTextField.setText(printText.format(PARTICLE_NUMBER*pressure()));
+                particlesTextField.setText(printText.format(PARTICLE_NUMBER));
+                calculationTextField.setText(printText.format(PARTICLE_NUMBER*pressure()*positionPiston)+" - "+printText.format(PARTICLE_NUMBER*temperature()));
+                finalTextField.setText(printText.format(PARTICLE_NUMBER*pressure()*positionPiston-PARTICLE_NUMBER*temperature()));
                 AboveGraphPanel.repaint();
                 GraphicPanel.repaint();
                 AboveGraphPanel.repaint();
@@ -387,11 +393,17 @@ public class timeListener implements ActionListener
         BelowGraphPanel = new TPGraphPanel();
         GraphicPanel = new AnimationPanel();
         pressureTextField = new javax.swing.JTextField();
-        temperatureTextField = new javax.swing.JTextField();
+        finalTextField = new javax.swing.JTextField();
         volumeTextField = new javax.swing.JTextField();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
+        particlesTextField = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        jLabel5 = new javax.swing.JLabel();
+        calculationTextField = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
+        temperatureTextField = new javax.swing.JTextField();
         ControlPanel = new javax.swing.JPanel();
         volumeButton = new javax.swing.JRadioButton();
         temperatureRadioButton = new javax.swing.JRadioButton();
@@ -431,11 +443,16 @@ public class timeListener implements ActionListener
         GraphicPanel.setBackground(new java.awt.Color(186, 183, 205));
         GraphicPanel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
-        pressureTextField.setText("0.001");
+        pressureTextField.setText("1.2345");
 
-        temperatureTextField.setText("0.001");
+        finalTextField.setText("1.2345");
 
-        volumeTextField.setText("0.001");
+        volumeTextField.setText("1.2345");
+        volumeTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                volumeTextFieldActionPerformed(evt);
+            }
+        });
 
         jLabel1.setText("pressure(p)");
 
@@ -443,22 +460,50 @@ public class timeListener implements ActionListener
 
         jLabel3.setText("volume(V)");
 
+        particlesTextField.setText("0.000");
+
+        jLabel4.setText("particles(N)");
+
+        jLabel5.setText("PV-NT =");
+
+        calculationTextField.setText("1.2345");
+
+        jLabel6.setText(" =");
+
+        temperatureTextField.setText("1.2345");
+
         javax.swing.GroupLayout GraphicPanelLayout = new javax.swing.GroupLayout(GraphicPanel);
         GraphicPanel.setLayout(GraphicPanelLayout);
         GraphicPanelLayout.setHorizontalGroup(
             GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, GraphicPanelLayout.createSequentialGroup()
+            .addGroup(GraphicPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel3))
+                .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel5)
+                    .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(jLabel1)
+                        .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(volumeTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(pressureTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(temperatureTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(174, Short.MAX_VALUE))
+                    .addGroup(GraphicPanelLayout.createSequentialGroup()
+                        .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(pressureTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(volumeTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 73, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel2)
+                            .addComponent(jLabel4))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(temperatureTextField, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 73, Short.MAX_VALUE)
+                            .addComponent(particlesTextField, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE)))
+                    .addGroup(GraphicPanelLayout.createSequentialGroup()
+                        .addComponent(calculationTextField)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel6)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(finalTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 83, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
         GraphicPanelLayout.setVerticalGroup(
             GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -466,16 +511,22 @@ public class timeListener implements ActionListener
                 .addContainerGap(168, Short.MAX_VALUE)
                 .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(volumeTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
+                    .addComponent(jLabel4)
+                    .addComponent(particlesTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(temperatureTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3)
+                    .addComponent(pressureTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(temperatureTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(GraphicPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(pressureTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel1))
-                .addContainerGap())
+                    .addComponent(jLabel5)
+                    .addComponent(calculationTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel6)
+                    .addComponent(finalTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(13, 13, 13))
         );
 
         ControlPanel.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.RAISED));
@@ -526,9 +577,9 @@ public class timeListener implements ActionListener
                     .addGroup(ControlPanelLayout.createSequentialGroup()
                         .addComponent(volumeButton)
                         .addGap(34, 34, 34)))
-                .addGroup(ControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(volumeSlider, javax.swing.GroupLayout.DEFAULT_SIZE, 182, Short.MAX_VALUE)
-                    .addComponent(temperatureSlider, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addGroup(ControlPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(volumeSlider, javax.swing.GroupLayout.DEFAULT_SIZE, 228, Short.MAX_VALUE)
+                    .addComponent(temperatureSlider, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         ControlPanelLayout.setVerticalGroup(
@@ -558,7 +609,7 @@ public class timeListener implements ActionListener
                 .addGroup(jInternalFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(GraphicPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(ControlPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(15, Short.MAX_VALUE))
         );
         jInternalFrame1Layout.setVerticalGroup(
             jInternalFrame1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -580,7 +631,7 @@ public class timeListener implements ActionListener
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jInternalFrame1)
+            .addComponent(jInternalFrame1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -622,6 +673,10 @@ public class timeListener implements ActionListener
         mode = MODE.TEMPERATURE;
     }//GEN-LAST:event_temperatureRadioButtonActionPerformed
 
+    private void volumeTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_volumeTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_volumeTextFieldActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel AboveGraphPanel;
@@ -629,10 +684,16 @@ public class timeListener implements ActionListener
     private javax.swing.JPanel ControlPanel;
     private javax.swing.JPanel GraphicPanel;
     private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JTextField calculationTextField;
+    private javax.swing.JTextField finalTextField;
     private javax.swing.JInternalFrame jInternalFrame1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabel6;
+    private javax.swing.JTextField particlesTextField;
     private javax.swing.JTextField pressureTextField;
     private javax.swing.JRadioButton temperatureRadioButton;
     private javax.swing.JSlider temperatureSlider;
